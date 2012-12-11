@@ -1,0 +1,85 @@
+name:          lens-core
+category:      Data, Lenses
+version:       0.1
+license:       BSD3
+cabal-version: >= 1.8
+license-file:  LICENSE
+author:        Edward A. Kmett
+maintainer:    Edward A. Kmett <ekmett@gmail.com>
+stability:     provisional
+homepage:      http://github.com/ekmett/lens-core/
+bug-reports:   http://github.com/ekmett/lens-core/issues
+copyright:     Copyright (C) 2012 Edward A. Kmett
+synopsis:      A Portable Core for Lenses, Folds and Traversals
+description:   This package provides the core classes and type synonyms for the @lens@ package.
+
+build-type:    Simple
+tested-with:   GHC == 7.0.4, GHC == 7.4.1, GHC == 7.6.1
+extra-source-files:
+  .travis.yml
+  .ghci
+  .gitignore
+  .vim.custom
+  config
+  README.markdown
+  CHANGELOG.markdown
+
+source-repository head
+  type: git
+  location: git://github.com/ekmett/lens-core.git
+
+-- Use old transformers
+flag transformers2
+  default: False
+  manual: False
+
+-- Disallow unsafeCoerce
+flag safe
+  default: False
+  manual: True
+
+-- Assert that we are trustworthy when we can
+flag trustworthy
+  default: True
+  manual: True
+
+
+library
+  other-extensions:
+    CPP, FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, UndecidableInstances, Rank2Types
+
+  build-depends:
+    base >= 2 && < 5
+
+  if flag(transformers2)
+    build-depends:  transformers >= 0.2 && < 0.3
+    hs-source-dirs: compat
+    exposed-modules:
+      Control.Applicative.Backwards
+      Control.Applicative.Lift
+      Data.Functor.Reverse
+  else
+    build-depends: transformers >= 0.3 && < 0.4
+
+  exposed-modules:
+    Control.Lens.Core
+    Control.Lens.Core.Classes
+    Control.Lens.Core.Types
+
+  if flag(safe)
+    cpp-options: -DSAFE=1
+
+  if impl(ghc<7.4)
+    ghc-options: -fno-spec-constr-count
+
+  if impl(ghc>=7.2)
+    if flag(trustworthy)
+      other-extensions: Trustworthy
+      cpp-options: -DTRUSTWORTHY=1
+    build-depends: ghc-prim
+    cpp-options: -DDEFAULT_SIGNATURES=1
+  else
+    build-depends: generic-deriving
+
+  ghc-options: -Wall -fwarn-tabs -O2 -fdicts-cheap -funbox-strict-fields
+  hs-source-dirs: src
