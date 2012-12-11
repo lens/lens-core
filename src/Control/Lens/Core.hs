@@ -1,4 +1,3 @@
-
 module Control.Lens.Core
   ( module Control.Lens.Core.Classes
   , module Control.Lens.Core.Types

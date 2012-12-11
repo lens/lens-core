@@ -13,7 +13,7 @@
 -- License     :  BSD-style (see the file LICENSE)
 -- Maintainer  :  Edward Kmett <ekmett@gmail.com>
 -- Stability   :  provisional
--- Portability :  Rank2Types
+-- Portability :  MPTCS+FDs
 --
 ----------------------------------------------------------------------------
 module Control.Lens.Core.Classes

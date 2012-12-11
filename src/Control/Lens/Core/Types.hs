@@ -1,4 +1,15 @@
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Control.Lens.Core.Types
+-- Copyright   :  (C) 2012 Edward Kmett
+-- License     :  BSD-style (see the file LICENSE)
+-- Maintainer  :  Edward Kmett <ekmett@gmail.com>
+-- Stability   :  provisional
+-- Portability :  MPTCs,FDs+Rank2Types
+--
+----------------------------------------------------------------------------
 module Control.Lens.Core.Types
   (
   -- * Lenses
@@ -58,28 +69,28 @@ import Control.Lens.Core.Classes
 --
 -- 1) You get back what you put in:
 --
--- @'Control.Lens.Getter.view' l ('Control.Lens.Setter.set' l b a)  ≡ b@
+-- @'view' l ('set' l b a)  ≡ b@
 --
 -- 2) Putting back what you got doesn't change anything:
 --
--- @'Control.Lens.Setter.set' l ('Control.Lens.Getter.view' l a) a  ≡ a@
+-- @'set' l ('view' l a) a  ≡ a@
 --
 -- 3) Setting twice is the same as setting once:
 --
--- @'Control.Lens.Setter.set' l c ('Control.Lens.Setter.set' l b a) ≡ 'Control.Lens.Setter.set' l c a@
+-- @'set' l c ('set' l b a) ≡ 'set' l c a@
 --
 -- These laws are strong enough that the 4 type parameters of a 'Lens' cannot
 -- vary fully independently. For more on how they interact, read the \"Why is
 -- it a Lens Family?\" section of
 -- <http://comonad.com/reader/2012/mirrored-lenses/>.
 --
--- Every 'Lens' can be used directly as a 'Control.Lens.Setter.Setter' or
--- 'Control.Lens.Traversal.Traversal'.
+-- Every 'Lens' can be used directly as a 'Setter' or
+-- 'Traversal'.
 --
--- You can also use a 'Lens' for 'Control.Lens.Getter.Getting' as if it were a
--- 'Control.Lens.Fold.Fold' or 'Control.Lens.Getter.Getter'.
+-- You can also use a 'Lens' for 'Getting' as if it were a
+-- 'Fold' or 'Getter'.
 --
--- Since every lens is a valid 'Control.Lens.Traversal.Traversal', the
+-- Since every lens is a valid 'Traversal', the
 -- traversal laws are required of any lenses you create:
 --
 -- @
@@ -93,7 +104,7 @@ type Lens s t a b = forall f. Functor f => (a -> f b) -> s -> f t
 -- | @type 'SimpleLens' = 'Simple' 'Lens'@
 type SimpleLens s a = Lens s s a a
 
--- | Every 'IndexedLens' is a valid 'Lens' and a valid 'Control.Lens.IndexedTraversal.IndexedTraversal'.
+-- | Every 'IndexedLens' is a valid 'Lens' and a valid 'IndexedTraversal'.
 type IndexedLens i s t a b = forall f k. (Indexable i k, Functor f) => k (a -> f b) (s -> f t)
 
 -- | @type 'SimpleIndexedLens' i = 'Simple' ('IndexedLens' i)@
@@ -101,7 +112,7 @@ type SimpleIndexedLens i s a = IndexedLens i s s a a
 
 -- |
 -- Many combinators that accept a 'Lens' can also accept a
--- 'Control.Lens.Traversal.Traversal' in limited situations.
+-- 'Traversal' in limited situations.
 --
 -- They do so by specializing the type of 'Functor' that they require of the
 -- caller.
@@ -110,7 +121,7 @@ type SimpleIndexedLens i s a = IndexedLens i s s a a
 -- then they may be passed a 'Lens'.
 --
 -- Further, if @f@ is an 'Applicative', they may also be passed a
--- 'Control.Lens.Traversal.Traversal'.
+-- 'Traversal'.
 type LensLike f s t a b = (a -> f b) -> s -> f t
 
 -- | @type 'SimpleLensLike' f = 'Simple' ('LensLike' f)@
@@ -130,7 +141,7 @@ type SimpleOverloaded k f s a = Overloaded k f s s a a
 -- Traversals
 ------------------------------------------------------------------------------
 
--- | A 'Traversal' can be used directly as a 'Control.Lens.Setter.Setter' or a 'Fold' (but not as a 'Lens') and provides
+-- | A 'Traversal' can be used directly as a 'Setter' or a 'Fold' (but not as a 'Lens') and provides
 -- the ability to both read and update multiple fields, subject to some relatively weak 'Traversal' laws.
 --
 -- These have also been known as multilenses, but they have the signature and spirit of
@@ -140,7 +151,7 @@ type SimpleOverloaded k f s a = Overloaded k f s s a a
 -- and the more evocative name suggests their application.
 --
 -- Most of the time the 'Traversal' you will want to use is just 'traverse', but you can also pass any
--- 'Lens' or 'Control.Lens.Iso.Iso' as a 'Traversal', and composition of a 'Traversal' (or 'Lens' or 'Control.Lens.Iso.Iso') with a 'Traversal' (or 'Lens' or 'Control.Lens.Iso.Iso')
+-- 'Lens' or 'Iso' as a 'Traversal', and composition of a 'Traversal' (or 'Lens' or 'Iso') with a 'Traversal' (or 'Lens' or 'Iso')
 -- using (.) forms a valid 'Traversal'.
 --
 -- The laws for a Traversal @t@ follow from the laws for Traversable as stated in \"The Essence of the Iterator Pattern\".
@@ -160,13 +171,13 @@ type Traversal s t a b = forall f. Applicative f => (a -> f b) -> s -> f t
 -- | @type SimpleTraversal = 'Simple' 'Traversal'@
 type SimpleTraversal s a = Traversal s s a a
 
--- | Every indexed traversal is a valid 'Control.Lens.Traversal.Traversal' or
--- 'Control.Lens.IndexedFold.IndexedFold'.
+-- | Every indexed traversal is a valid 'Traversal' or
+-- 'IndexedFold'.
 --
 -- The 'Indexed' constraint is used to allow an 'IndexedTraversal' to be used
--- directly as a 'Control.Lens.Traversal.Traversal'.
+-- directly as a 'Traversal'.
 --
--- The 'Control.Lens.Traversal.Traversal' laws are still required to hold.
+-- The 'Traversal' laws are still required to hold.
 type IndexedTraversal i s t a b = forall f k. (Indexable i k, Applicative f) => k (a -> f b) (s -> f t)
 
 -- | @type 'SimpleIndexedTraversal' i = 'Simple' ('IndexedTraversal' i)@
@@ -177,7 +188,7 @@ type SimpleIndexedTraversal i s a = IndexedTraversal i s s a a
 ------------------------------------------------------------------------------
 
 -- |
--- The only 'Control.Lens.Type.Lens'-like law that can apply to a 'Setter' @l@ is that
+-- The only 'Lens'-like law that can apply to a 'Setter' @l@ is that
 --
 -- @'set' l y ('set' l x a) ≡ 'set' l y a@
 --
@@ -186,39 +197,17 @@ type SimpleIndexedTraversal i s a = IndexedTraversal i s s a a
 -- However, two 'Functor' laws apply to a 'Setter':
 --
 -- @
--- 'over' l 'id' ≡ 'id'
--- 'over' l f '.' 'over' l g ≡ 'over' l (f '.' g)
--- @
---
--- These an be stated more directly:
---
--- @
 -- l 'pure' ≡ 'pure'
 -- l f . 'untainted' . l g ≡ l (f . 'untainted' . g)
 -- @
 --
--- You can compose a 'Setter' with a 'Control.Lens.Type.Lens' or a 'Control.Lens.Traversal.Traversal' using ('.') from the Prelude
+-- You can compose a 'Setter' with a 'Lens' or a 'Traversal' using ('.') from the Prelude
 -- and the result is always only a 'Setter' and nothing more.
---
--- >>> over traverse f [a,b,c,d]
--- [f a,f b,f c,f d]
---
--- >>> over _1 f (a,b)
--- (f a,b)
---
--- >>> over (traverse._1) f [(a,b),(c,d)]
--- [(f a,b),(f c,d)]
---
--- >>> over both f (a,b)
--- (f a,f b)
---
--- >>> over (traverse.both) f [(a,b),(c,d)]
--- [(f a,f b),(f c,f d)]
 type Setter s t a b = forall f. Settable f => (a -> f b) -> s -> f t
 
 -- | Every 'IndexedSetter' is a valid 'Setter'
 --
--- The 'Control.Lens.Setter.Setter' laws are still required to hold.
+-- The 'Setter' laws are still required to hold.
 type IndexedSetter i s t a b = forall f k.
   (Indexable i k, Settable f) => k (a -> f b) (s -> f t)
 
@@ -234,7 +223,7 @@ type SimpleIndexedSetter i s a = IndexedSetter i s s a a
 --
 -- @'sets' Data.Text.map :: 'SimpleSetter' 'Data.Text.Internal.Text' 'Char'@
 --
--- @type 'SimpleSetter' = 'Control.Lens.Type.Simple' 'Setter'@
+-- @type 'SimpleSetter' = 'Simple' 'Setter'@
 type SimpleSetter s a = Setter s s a a
 
 --------------------------
@@ -252,11 +241,11 @@ type SimpleSetter s a = Setter s s a a
 --
 -- A 'Getter' is a legal 'Fold' that just ignores the supplied 'Monoid'
 --
--- Unlike a 'Control.Lens.Traversal.Traversal' a 'Fold' is read-only. Since a 'Fold' cannot be used to write back
+-- Unlike a 'Traversal' a 'Fold' is read-only. Since a 'Fold' cannot be used to write back
 -- there are no lens laws that apply.
 type Fold s a = forall f. (Gettable f, Applicative f) => (a -> f a) -> s -> f s
 
--- | Every 'IndexedFold' is a valid 'Control.Lens.Fold.Fold'.
+-- | Every 'IndexedFold' is a valid 'Fold'.
 type IndexedFold i s a = forall k f.
   (Indexable i k, Applicative f, Gettable f) => k (a -> f a) (s -> f s)
 
@@ -267,22 +256,22 @@ type IndexedFold i s a = forall k f.
 -- | A 'Getter' describes how to retrieve a single value in a way that can be
 -- composed with other lens-like constructions.
 --
--- Unlike a 'Control.Lens.Type.Lens' a 'Getter' is read-only. Since a 'Getter'
+-- Unlike a 'Lens' a 'Getter' is read-only. Since a 'Getter'
 -- cannot be used to write back there are no lens laws that can be applied to
 -- it. In fact, it is isomorphic to an arbitrary function from @(a -> s)@.
 --
--- Moreover, a 'Getter' can be used directly as a 'Control.Lens.Fold.Fold',
+-- Moreover, a 'Getter' can be used directly as a 'Fold',
 -- since it just ignores the 'Applicative'.
 type Getter s a = forall f. Gettable f => (a -> f a) -> s -> f s
 
--- | Every 'IndexedGetter' is a valid 'Control.Lens.IndexedFold.IndexedFold' and 'Getter'.
+-- | Every 'IndexedGetter' is a valid 'IndexedFold' and 'Getter'.
 type IndexedGetter i s a = forall k f. (Indexable i k, Gettable f) => k (a -> f a) (s -> f s)
 
 ------------------------------------------------------------------------------
 -- Prisms
 ------------------------------------------------------------------------------
 
--- | A 'Prism' @l@ is a 0-or-1 target 'Traversal' that can also be turned around with 'remit' to
+-- | A 'Prism' @l@ is a 0-or-1 target 'Traversal' that can also be turned around to
 -- obtain a 'Getter' in the opposite direction.
 --
 -- There are two laws that a 'Prism' should satisfy:
@@ -297,59 +286,7 @@ type IndexedGetter i s a = forall k f. (Indexable i k, Gettable f) => k (a -> f 
 --
 -- These two laws imply that the 'Traversal' laws hold for every 'Prism' and that we 'traverse' at most 1 element:
 --
--- @'Control.Lens.Fold.lengthOf' l x '<=' 1@
---
--- It may help to think of this as a 'Control.Lens.Iso.Iso' that can be partial in one direction.
---
--- Every 'Prism' is a valid 'Traversal'.
---
--- Every 'Control.Lens.Iso.Iso' is a valid 'Prism'.
---
--- For example, you might have a @'Simple' 'Prism' 'Integer' Natural@ allows you to always
--- go from a 'Natural' to an 'Integer', and provide you with tools to check if an 'Integer' is
--- a 'Natural' and/or to edit one if it is.
---
---
--- @
--- 'nat' :: 'Simple' 'Prism' 'Integer' 'Numeric.Natural.Natural'
--- 'nat' = 'prism' 'toInteger' '$' \\ i ->
---    if i '<' 0
---    then 'Left' i
---    else 'Right' ('fromInteger' i)
--- @
---
--- Now we can ask if an 'Integer' is a 'Natural'.
---
--- >>> 5^?nat
--- Just 5
---
--- >>> (-5)^?nat
--- Nothing
---
--- We can update the ones that are:
---
--- >>> (-3,4) & both.nat *~ 2
--- (-3,8)
---
--- And we can then convert from a 'Natural' to an 'Integer'.
---
--- >>> 5 ^. remit nat -- :: Natural
--- 5
---
--- Similarly we can use a 'Prism' to 'traverse' the left half of an 'Either':
---
--- >>> Left "hello" & _left %~ length
--- Left 5
---
--- or to construct an 'Either':
---
--- >>> 5^.remit _left
--- Left 5
---
--- such that if you query it with the 'Prism', you will get your original input back.
---
--- >>> 5^.remit _left ^? _left
--- Just 5
+-- @'lengthOf' l x '<=' 1@
 --
 -- Another interesting way to think of a 'Prism' is as the categorical dual of a 'Lens'
 -- -- a /co/-'Lens', so to speak. This is what permits the construction of 'outside'.
@@ -362,10 +299,11 @@ type SimplePrism s a = Prism s s a a
 -- Isos
 -----------------------------------------------------------------------------
 
--- | Isomorphism families can be composed with other lenses using ('.') and 'id'.
+-- | Isomorphism families can be composed with other lenses using ('.') and 'id' from the 'Prelude'. When composed with
+-- another 'Iso' using 'Control.Category..' and 'Control.Category.id' from @Control.Category@ then the result is another 
+-- 'Iso'.
 type Iso s t a b = forall k f. (Isomorphic k, Functor f) => k (a -> f b) (s -> f t)
 
 -- |
--- @type 'SimpleIso' = 'Control.Lens.Type.Simple' 'Iso'@
+-- @type 'SimpleIso' = 'Simple' 'Iso'@
 type SimpleIso s a = Iso s s a a
-
